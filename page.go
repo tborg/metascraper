@@ -104,10 +104,11 @@ func AttrMap(hasAttr bool, z *html.Tokenizer) map[string]string {
 // PageReader implements the TokenReader interface; it maintains the necessary
 // state for extracting the body text and page title from a token stream.
 type PageReader struct {
-	page    *Page
-	inTitle bool
-	inBody  bool
-	text    []byte
+	page     *Page
+	inTitle  bool
+	inBody   bool
+	inScript bool
+	text     []byte
 }
 
 func (r *PageReader) HandleStart(tn string, attrs map[string]string, z *html.Tokenizer) {
@@ -116,6 +117,8 @@ func (r *PageReader) HandleStart(tn string, attrs map[string]string, z *html.Tok
 		r.inTitle = true
 	case "body":
 		r.inBody = true
+	case "script":
+		r.inScript = true
 	}
 }
 
@@ -125,13 +128,15 @@ func (r *PageReader) HandleEnd(tn string, z *html.Tokenizer) {
 		r.inTitle = false
 	case "body":
 		r.inBody = false
+	case "script":
+		r.inScript = false
 	}
 }
 
 func (r *PageReader) HandleText(text []byte) {
 	if r.inTitle {
 		r.page.Title = string(text)
-	} else if r.inBody {
+	} else if r.inBody && !r.inScript {
 		r.text = append(r.text, text...)
 	}
 }

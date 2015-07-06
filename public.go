@@ -2,6 +2,7 @@ package metascraper
 
 import (
 	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -19,9 +20,9 @@ func Scrape(url string) (*Page, error) {
 	if err != nil {
 		return p, err
 	}
-	// TODO: Can this be done with fewer conversions?
-	htmlBytes := []byte{}
-	if _, err = resp.Body.Read(htmlBytes); err != nil {
+	defer resp.Body.Close()
+	htmlBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
 		return p, err
 	}
 	p.HTML = string(htmlBytes)
